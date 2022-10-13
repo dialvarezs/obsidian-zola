@@ -26,19 +26,27 @@ docs_dir = site_dir / "content/docs"
 pp = PrettyPrinter(indent=4, compact=False).pprint
 
 
-def slugify_path(path: Union[str, Path], no_suffix: bool) -> Path:
+def slugify_path(
+    path: Union[str, Path], not_file: bool, has_extension: bool = True
+) -> Path:
     """Slugifies every component of a path. Note that '../xxx' will get slugified to '/xxx'. Always use absolute paths. `no_suffix=True` when path is URL or directory (slugify everything including extension)."""
 
     path = Path(str(path).lower())
     if Settings.is_true("SLUGIFY"):
-        if no_suffix:
+        if not_file:
             os_path = "/".join(slugify(item) for item in path.parts)
             name = ""
             suffix = ""
         else:
             os_path = "/".join(slugify(item) for item in str(path.parent).split("/"))
-            name = ".".join(slugify(item) for item in path.stem.split("."))
-            suffix = path.suffix
+            if has_extension:
+                name = ".".join(slugify(item) for item in path.stem.split("."))
+                suffix = path.suffix
+            else:
+                name = ".".join(slugify(item) for item in path.name.split("."))
+                suffix = ""
+
+        print([os_path, name, suffix])
 
         if name != "" and suffix != "":
             return Path(os_path) / f"{name}{suffix}"
@@ -116,7 +124,11 @@ class DocLink:
                 .resolve()
                 .relative_to(docs_dir)
             )
-            new_rel_path = quote(str(slugify_path(new_rel_path, False)))
+            print("PP:", new_rel_path)
+            new_rel_path = quote(
+                str(slugify_path(new_rel_path, False, has_extension=False))
+            )
+            print("NP:", new_rel_path)
 
             return f"/docs/{new_rel_path}"
         except Exception:
@@ -127,7 +139,7 @@ class DocLink:
     def parse(cls, line: str, doc_path: "DocPath") -> Tuple[str, List[str]]:
         """Parses and fixes all internal links in a line. Also returns linked paths for knowledge graph."""
 
-        parsed = re.sub(r"%20", "-", re.sub(r"(%20)*\.(%20)*", ".", line))
+        parsed = line
         # parsed = line
         linked: List[str] = []
 
