@@ -127,10 +127,11 @@ class DocLink:
     def parse(cls, line: str, doc_path: "DocPath") -> Tuple[str, List[str]]:
         """Parses and fixes all internal links in a line. Also returns linked paths for knowledge graph."""
 
-        parsed = line
+        parsed = re.sub(r"%20", "-", re.sub(r"(%20)*\.(%20)*", ".", line))
+        # parsed = line
         linked: List[str] = []
 
-        for link in cls.get_links(line):
+        for link in cls.get_links(parsed):
             abs_url = link.abs_url(doc_path)
 
             if any(link.title.endswith(ext) for ext in (".webm", ".mp4")):
@@ -217,7 +218,7 @@ class DocPath:
         title = " ".join(
             [
                 item if item[0].isupper() else item.title()
-                for item in self.old_path.stem.split(" ")
+                for item in re.sub(r" +", " ", self.old_path.stem).split(" ")
             ]
         ).replace('"', r"\"")
         return title
