@@ -124,11 +124,9 @@ class DocLink:
                 .resolve()
                 .relative_to(docs_dir)
             )
-            print("PP:", new_rel_path)
             new_rel_path = quote(
                 str(slugify_path(new_rel_path, False, has_extension=False))
             )
-            print("NP:", new_rel_path)
 
             return f"/docs/{new_rel_path}"
         except Exception:
